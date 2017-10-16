@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION="0.0.9"
+VERSION="0.1.0"
 
 trap 'echo -ne "\n:::\n:::\tCaught signal, exiting at line $LINENO, while running :${BASH_COMMAND}:\n:::\n"; exit' SIGINT SIGQUIT
 
@@ -12,7 +12,7 @@ trap 'echo -ne "\n:::\n:::\tCaught signal, exiting at line $LINENO, while runnin
 function usage()
 {
 	echo -ne "\n"
-	echo -ne "========== $0-${VERRSION} =========="
+	echo -ne "==================== $0-${VERSION} ====================\n"
 	echo -ne "Usage: [FROM_ENCODING=ENCODING] $0 <l|e> <ARCHIVE>\n"
 	echo -ne "\t l=lIST, x=ExTRACT ARCHIVE\n"
 	echo -ne "\t ENCODING by default is 'CP932'; see 'convmv --list' for more\n"
@@ -28,8 +28,10 @@ fi
 COMMAND=$1
 ARCHIVE=$2
 
-# Change that to "YES", iff you are brave AND work on non-UTF8 environment
+# Change that to "YES", iff you are brave AND work on non-UTF8 environment...
 I_KNOW_WHAT_I_AM_DOING="NO"
+# ... and fix that
+FROM_LOCALE="ja_JP.Shift_JIS"
 
 FROM_ENCODING=${FROM_ENCODING:-CP932}
 TO_ENCODING=$(locale charmap)
@@ -41,6 +43,8 @@ then
 		exit -13
 	else
 		echo "$0: You are venturing into unchartered territory..."
+		echo "$0: FIXME: You need to have proper locale support..."
+		echo "$0: you've been warned!"
 	fi
 fi
 
@@ -68,14 +72,15 @@ fi
 if [ "a${COMMAND}a" == "axa" ]
 then
 	WORKDIR=$(pwd)
+	ARCHIVE_FILE="$(cd "$(dirname "${ARCHIVE}")"; pwd)/$(basename "${ARCHIVE}")"
 	TMP="jzip.$$"
 	echo "$0: extracting ${ARCHIVE}, supposedly in ${FROM_ENCODING} encoding into a temporary directory (${TMP}) ..."
 	mkdir ${TMP} && cd ${TMP}
-	LC_ALL=ja_JP.Shift_JIS 7z ${COMMAND} "../${ARCHIVE}" |iconv -c -f ${FROM_ENCODING} -t ${TO_ENCODING}
+	LC_ALL=${FROM_LOCALE} 7z ${COMMAND} "../${ARCHIVE}" |iconv -c -f ${FROM_ENCODING} -t ${TO_ENCODING}
 	echo "$0: fixing filenames, converting ${FROM_ENCODING} -> ${TO_ENCODING} ..."
 	convmv -f ${FROM_ENCODING} -t ${TO_ENCODING} --notest -r *
 	echo "$0: moving files to ${WORKDIR} and removing the temporary directory (${TMP}) ..."
-	mv * ${WORKDIR}
+	cp -a -i * ${WORKDIR}/
 	cd ${WORKDIR} && rm -rf ${TMP}
 	echo "$0: done extracting."
 else
