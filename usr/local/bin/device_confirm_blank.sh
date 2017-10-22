@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION="0.0.9"
+VERSION="0.0.10"
 
 trap 'echo -ne "\n:::\n:::\tCaught signal, exiting at line $LINENO, while running :${BASH_COMMAND}:\n:::\n"; exit' SIGINT SIGQUIT
 
@@ -67,10 +67,12 @@ else
 	exit 1
 fi
 
-echo "Veryfying ${DEVICE_TO_CHECK} with random ${NUMBER_OF_CHECKS} runs (+1st/last) of ${CHECK_SIZE} bytes each for 0s..."
 TOTAL_BYTES=$(${COMMANDS[blockdev]} --getsize64 ${DEVICE_TO_CHECK})
+echo "Veryfying that ${DEVICE_TO_CHECK} (size:${TOTAL_BYTES} bytes) contains only 0s..."
 
-echo -ne "1. Checking ${CHECK_SIZE} bytes at the beginning..."
+FIRST_OFFSET=0
+echo -ne "\t1. Verifying ${CHECK_SIZE} bytes at the beginning (at offset ${FIRST_OFFSET})..."
+TEST_RUN=1
 ${COMMANDS[dd]} if=${DEVICE_TO_CHECK} bs=${CHECK_SIZE} count=1 iflag=skip_bytes skip=0 2>/dev/null| ${COMMANDS[md5sum]} --status --quiet -c <(echo "${CHECK_MD5}") 2>/dev/null 1>&2
 if [ $? -ne 0 ]
 then
@@ -80,8 +82,9 @@ else
 	echo -ne "\b\b\b: OK.\n"
 fi
 
-echo -ne "2. Checking ${CHECK_SIZE} bytes at the end..."
 LAST_OFFSET=$(( ${TOTAL_BYTES} - ${CHECK_SIZE} ))
+echo -ne "\t2. Verifying ${CHECK_SIZE} bytes at the end (at offset ${LAST_OFFSET})..."
+TEST_RUN=2
 ${COMMANDS[dd]} if=${DEVICE_TO_CHECK} bs=${CHECK_SIZE} count=1 iflag=skip_bytes skip=${LAST_OFFSET} 2>/dev/null| ${COMMANDS[md5sum]} --status --quiet -c <(echo "${CHECK_MD5}") 2>/dev/null 1>&2
 if [ $? -ne 0 ]
 then
@@ -91,10 +94,10 @@ else
 	echo -ne "\b\b\b: OK.\n"
 fi
 
-echo -ne "3. Checking random ${NUMBER_OF_CHECKS} runs in the middle..."
-TOTAL_CHECKS=$(echo "scale=0; ${TOTAL_BYTES}/${CHECK_SIZE}" |${COMMANDS[bc]} -l)
-RUNS_TO_CHECK=$(${COMMANDS[shuf]} --head-count=${NUMBER_OF_CHECKS} --input-range="0-${TOTAL_CHECKS}")
-TEST_RUN=0
+echo -ne "\t3. Verifying some (max. ${NUMBER_OF_CHECKS}) random runs of size ${CHECK_SIZE} in the middle..."
+# exclude first/last
+TOTAL_CHECKS=$(echo "scale=0; (${TOTAL_BYTES} - 2 * ${CHECK_SIZE})/${CHECK_SIZE}" |${COMMANDS[bc]} -l)
+RUNS_TO_CHECK=$(${COMMANDS[shuf]} --head-count=${NUMBER_OF_CHECKS} --input-range="1-${TOTAL_CHECKS}")
 for CURRENT_RUN in ${RUNS_TO_CHECK}
 do
 	((TEST_RUN+=1)) 
@@ -109,7 +112,7 @@ do
 done
 echo -ne "\b\b\b: OK.\n"
 
-echo -ne "All checked runs were only 0s.\n"
-PERCENT=$(echo "scale=2; 100.0 * ${NUMBER_OF_CHECKS} * ${CHECK_SIZE} / ${TOTAL_BYTES}" |${COMMANDS[bc]} -l)
-echo "There is ${PERCENT}% certainty that ${DEVICE_TO_CHECK} is blank."
-
+echo -ne "All ${TEST_RUN} runs of size ${CHECK_SIZE} were verified to contain only 0s.\n"
+VERIFIED_SIZE=$(echo "scale=2; ${TEST_RUN} * ${CHECK_SIZE}" |${COMMANDS[bc]} -l)
+PERCENT=$(echo "scale=2; 100.0 * ${VERIFIED_SIZE} / ${TOTAL_BYTES}" |${COMMANDS[bc]} -l)
+echo "${VERIFIED_SIZE} bytes of ${TOTAL_BYTES} bytes (or about ${PERCENT}%) of ${DEVICE_TO_CHECK} were verified to be 0s.ainty that ${DEVICE_TO_CHECK} is blank."
