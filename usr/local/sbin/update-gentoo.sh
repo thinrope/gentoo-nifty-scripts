@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION="1.0.6"
+VERSION="1.0.7"
 
 trap 'echo -ne "\n:::\n:::\tCaught signal, exiting at line $LINENO, while running :${BASH_COMMAND}:\n:::\n"; exit' SIGINT SIGQUIT
 
@@ -8,15 +8,8 @@ trap 'echo -ne "\n:::\n:::\tCaught signal, exiting at line $LINENO, while runnin
 # Copyright © 2012-2017 Kalin KOZHUHAROV <kalin@thinrope.net>
 
 
-NUMBER_OF_ARGUMENTS=0
-function usage()
-{
-	echo -ne "\n"
-	echo -ne "==================== $0-${VERSION} ====================\n"
-	echo -ne "Usage: $0\n"
-}
 
-# External dependencies
+# {{{ external dependencies
 declare -A COMMANDS
 ## app-portage/eix-0.32.9
 COMMANDS[eix-sync]="/usr/bin/eix-sync"
@@ -34,7 +27,17 @@ COMMANDS[emaint]="/usr/sbin/emaint"
 ## app-portage/gentoolkit-0.4.0
 COMMANDS[revdep-rebuild]="/usr/bin/revdep-rebuild"
 COMMANDS[eclean]="/usr/bin/eclean"
+# external dependencies }}}
 
+NUMBER_OF_ARGUMENTS=0
+function usage()
+{
+	echo -ne "\n"
+	echo -ne "==================== $0-${VERSION} ====================\n"
+	echo -ne "Usage: $0\n"
+}
+
+# {{{ standard error checking
 if [ "$#" -ne ${NUMBER_OF_ARGUMENTS} ]
 then
 	echo "$0: Illegal number of parameters: $# (should have been ${NUMBER_OF_ARGUMENTS}) !!!"
@@ -57,6 +60,7 @@ do
 		exit -3
 	fi
 done
+# standard error checking }}}
 
 
 ${COMMANDS[eix-sync]}
@@ -76,8 +80,9 @@ ${COMMANDS[eclean]} --destructive distfiles --fetch-restricted
 
 ${COMMANDS[demerge]} --record --comment "update-gentoo.sh-${VERSION} END"
 
-# ver	YYYY-mm-dd	Changes
 # -------------------------------------------------------------------------------------------------
-# 1.0.6	2017-11-26	remove dependency on python-updater (handled by emerge -N or -U)
+# YYYY-mm-dd	ver	Changes
+# -------------------------------------------------------------------------------------------------
+# 2017-11-26	1.0.6	remove dependency on python-updater (handled by emerge -N or -U)
 #			add COMMANDS dependencies and usage()
-#
+# 2017-11-27	1.0.7	refactor to unify Changes

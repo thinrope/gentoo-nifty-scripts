@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION="0.0.11"
+VERSION="0.0.12"
 
 trap 'echo -ne "\n:::\n:::\tCaught signal, exiting at line $LINENO, while running :${BASH_COMMAND}:\n:::\n"; exit' SIGINT SIGQUIT
 
@@ -9,13 +9,7 @@ trap 'echo -ne "\n:::\n:::\tCaught signal, exiting at line $LINENO, while runnin
 
 
 
-function usage()
-{
-	echo -ne "\n"
-	echo -ne "==================== $0-${VERSION} ====================\n"
-	echo -ne "Usage: $0 <DEVICE_TO_CHECK>\n"
-}
-# External dependencies
+# {{{ external dependencies
 declare -A COMMANDS
 ## sys-apps/util-linux-2.28.2
 COMMANDS[blockdev]="/sbin/blockdev"
@@ -27,10 +21,20 @@ COMMANDS[md5sum]="/usr/bin/md5sum"
 COMMANDS[numfmt]="/usr/bin/numfmt"
 ## sys-devel/bc-1.06.95-r1
 COMMANDS[bc]="/usr/bin/bc"
+# external dependencies }}}
 
-if [ "$#" -ne 1 ]
+NUMBER_OF_ARGUMENTS=1
+function usage()
+{
+	echo -ne "\n"
+	echo -ne "==================== $0-${VERSION} ====================\n"
+	echo -ne "Usage: $0 <DEVICE_TO_CHECK>\n"
+}
+
+# {{{ standard error checking
+if [ "$#" -ne ${NUMBER_OF_ARGUMENTS} ]
 then
-	echo "$0: Illegal number of parameters: $# !!!"
+	echo "$0: Illegal number of parameters: $# (should have been ${NUMBER_OF_ARGUMENTS}) !!!"
 	usage
 	exit -1
 fi
@@ -50,6 +54,7 @@ do
 		exit -3
 	fi
 done
+# standard error checking }}}
 
 DEVICE_TO_CHECK=$1
 # FIXME: does not work with VERBOSE
@@ -126,3 +131,9 @@ VERIFIED_SIZE_IECI=$(echo "${VERIFIED_SIZE}" |${COMMANDS[numfmt]} --suffix=B --t
 PERCENT=$(echo "scale=2; 100.0 * ${VERIFIED_SIZE} / ${TOTAL_BYTES}" |${COMMANDS[bc]} -l)
 echo "${VERIFIED_SIZE_IECI} of ${TOTAL_BYTES_IECI} (or about ${PERCENT}%) of ${DEVICE_TO_CHECK} were verified to be 0s."
 exit 0
+
+# -------------------------------------------------------------------------------------------------
+# YYYY-mm-dd	ver	Changes
+# -------------------------------------------------------------------------------------------------
+# 2017-11-27	0.0.12	refactor to include Changes and better UI
+#

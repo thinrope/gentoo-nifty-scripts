@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION="0.1.0"
+VERSION="0.1.1"
 
 trap 'echo -ne "\n:::\n:::\tCaught signal, exiting at line $LINENO, while running :${BASH_COMMAND}:\n:::\n"; exit' SIGINT SIGQUIT
 
@@ -9,6 +9,18 @@ trap 'echo -ne "\n:::\n:::\tCaught signal, exiting at line $LINENO, while runnin
 
 
 
+# {{{ external dependencies
+declare -A COMMANDS
+## app-arch/p7zip-16.02-r1
+COMMANDS[7z]="/usr/bin/7z"
+
+## sys-libs/glibc-2.25-r9
+COMMANDS[iconv]="/usr/bin/iconv"
+## app-text/convmv-2.01
+COMMANDS[convmv]="/usr/bin/convmv"
+# external dependencies }}}
+
+NUMBER_OF_ARGUMENTS=2
 function usage()
 {
 	echo -ne "\n"
@@ -18,12 +30,30 @@ function usage()
 	echo -ne "\t ENCODING by default is 'CP932'; see 'convmv --list' for more\n"
 }
 
-if [ "$#" -ne 2 ]
+# {{{ standard error checking
+if [ "$#" -ne ${NUMBER_OF_ARGUMENTS} ]
 then
-	echo "$0: Illegal number of parameters: $# !!!"
+	echo "$0: Illegal number of parameters: $# (should have been ${NUMBER_OF_ARGUMENTS}) !!!"
 	usage
 	exit -1
 fi
+
+for C in "${!COMMANDS[@]}"
+do
+	if [ ! -e "${COMMANDS[$C]}" ]
+	then
+		echo "$0: Cannot find ${C} command, tried ${COMMANDS[$C]} path..."
+		echo "$0: Giving up, please fix the script."
+		exit -2
+	fi
+	if [ ! -x "${COMMANDS[$C]}" ]
+	then
+		echo "$0: Cannot execute ${COMMANDS[$C]}, check your user permissions."
+		echo "$0: Giving up, please use sudo as appropriate."
+		exit -3
+	fi
+done
+# standard error checking }}}
 
 COMMAND=$1
 ARCHIVE=$2
@@ -76,9 +106,9 @@ then
 	TMP="jzip.$$"
 	echo "$0: extracting ${ARCHIVE}, supposedly in ${FROM_ENCODING} encoding into a temporary directory (${TMP}) ..."
 	mkdir ${TMP} && cd ${TMP}
-	LC_ALL=${FROM_LOCALE} 7z ${COMMAND} "../${ARCHIVE}" |iconv -c -f ${FROM_ENCODING} -t ${TO_ENCODING}
+	LC_ALL=${FROM_LOCALE} ${COMMANDS[7z]} ${COMMAND} "../${ARCHIVE}" |${COMMANDS[iconv]} -c -f ${FROM_ENCODING} -t ${TO_ENCODING}
 	echo "$0: fixing filenames, converting ${FROM_ENCODING} -> ${TO_ENCODING} ..."
-	convmv -f ${FROM_ENCODING} -t ${TO_ENCODING} --notest -r *
+	${COMMANDS[convmv]} -f ${FROM_ENCODING} -t ${TO_ENCODING} --notest -r *
 	echo "$0: moving files to ${WORKDIR} and removing the temporary directory (${TMP}) ..."
 	cp -a -i * ${WORKDIR}/
 	cd ${WORKDIR} && rm -rf ${TMP}
@@ -87,3 +117,10 @@ else
 	echo "$0: Unexpected execution path !!!"
 	exit -2
 fi
+
+# -------------------------------------------------------------------------------------------------
+# YYYY-mm-dd	ver	Changes
+# -------------------------------------------------------------------------------------------------
+# 2017-11-27	0.1.1	refactor to include Changes and better UI
+#			introduce COMMANDS array
+#
