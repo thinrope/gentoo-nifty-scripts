@@ -41,9 +41,9 @@ my %M = ( Jan => '01', Feb => '02', Mar => '03', Apr => '04',
 	  May => '05', Jun => '06', Jul => '07', Aug => '08',
 	  Sep => '09', Oct => '10', Nov => '11', Dec => '12' );
 
-open( my $in_fh, '<:raw:encoding(UTF-16LE)', $ARGV[0] )
+open( my $in_fh, '<:raw:encoding(UTF-16LE):crlf', $ARGV[0] )
 	or die("$! , exitting");
-open( my $out_fh, '>:encoding(UTF-16LE)', $ARGV[1] )
+open( my $out_fh, '>:raw:encoding(UTF-16LE):crlf', $ARGV[1] )
 	or die("$! , exitting");
 
 while (defined( my $line = <$in_fh>))
