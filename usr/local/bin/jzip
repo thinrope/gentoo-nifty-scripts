@@ -1,22 +1,22 @@
 #!/bin/bash
-VERSION="0.1.1"
+VERSION="0.1.2"
 
 trap 'echo -ne "\n:::\n:::\tCaught signal, exiting at line $LINENO, while running :${BASH_COMMAND}:\n:::\n"; exit' SIGINT SIGQUIT
 
 # jzip: Tool to extract Shift_JIS/CP932 (by default) archived zip files
 #
-# Copyright © 2017 Kalin KOZHUHAROV <kalin@thinrope.net>
+# Copyright © 2017-2019 Kalin KOZHUHAROV <kalin@thinrope.net>
 
 
 
 # {{{ external dependencies
 declare -A COMMANDS
-## app-arch/p7zip-16.02-r1
+## app-arch/p7zip-16.02-r4
 COMMANDS[7z]="/usr/bin/7z"
 
-## sys-libs/glibc-2.25-r9
+## sys-libs/glibc-2.27-r6
 COMMANDS[iconv]="/usr/bin/iconv"
-## app-text/convmv-2.01
+## app-text/convmv-2.04
 COMMANDS[convmv]="/usr/bin/convmv"
 # external dependencies }}}
 
@@ -85,33 +85,35 @@ then
 	exit -2
 fi
 
-if [ -f "${ARCHIVE}" ] && [ -r "${ARCHIVE}" ]
+WORKDIR=$(pwd)
+ARCHIVE_FILE="$(cd "$(dirname "${ARCHIVE}")"; pwd)/$(basename "${ARCHIVE}")"
+
+if [ -f "${ARCHIVE_FILE}" ] && [ -r "${ARCHIVE_FILE}" ]
 then
-	echo "Processing ${ARCHIVE}, supposedly in ${FROM_ENCODING} encoding..."
+	echo "Processing ${ARCHIVE_FILE}, supposedly in ${FROM_ENCODING} encoding..."
 else
-	echo "$0: Cannot access ${ARCHIVE} !!!"
+	echo "$0: Cannot access ${ARCHIVE_FILE} !!!"
 	exit 1
 fi
 
 if [ "a${COMMAND}a" == "ala" ]
 then
-	LC_ALL=ja_JP.Shift_JIS 7z ${COMMAND} "${ARCHIVE}" |iconv -c -f ${FROM_ENCODING} -t ${TO_ENCODING}
+	LC_ALL=ja_JP.Shift_JIS 7z ${COMMAND} "${ARCHIVE_FILE}" |iconv -c -f ${FROM_ENCODING} -t ${TO_ENCODING}
 	exit 0
 fi
 
 if [ "a${COMMAND}a" == "axa" ]
 then
-	WORKDIR=$(pwd)
-	ARCHIVE_FILE="$(cd "$(dirname "${ARCHIVE}")"; pwd)/$(basename "${ARCHIVE}")"
 	TMP="jzip.$$"
-	echo "$0: extracting ${ARCHIVE}, supposedly in ${FROM_ENCODING} encoding into a temporary directory (${TMP}) ..."
+	echo "$0: extracting ${ARCHIVE_FILE}, supposedly in ${FROM_ENCODING} encoding into a temporary directory (${TMP}) ..."
 	mkdir ${TMP} && cd ${TMP}
-	LC_ALL=${FROM_LOCALE} ${COMMANDS[7z]} ${COMMAND} "../${ARCHIVE}" |${COMMANDS[iconv]} -c -f ${FROM_ENCODING} -t ${TO_ENCODING}
+	LC_ALL=${FROM_LOCALE} ${COMMANDS[7z]} ${COMMAND} "${ARCHIVE_FILE}" |${COMMANDS[iconv]} -c -f ${FROM_ENCODING} -t ${TO_ENCODING}
 	echo "$0: fixing filenames, converting ${FROM_ENCODING} -> ${TO_ENCODING} ..."
-	${COMMANDS[convmv]} -f ${FROM_ENCODING} -t ${TO_ENCODING} --notest -r *
+	${COMMANDS[convmv]} -f ${FROM_ENCODING} -t ${TO_ENCODING} --notest -r .
 	echo "$0: moving files to ${WORKDIR} and removing the temporary directory (${TMP}) ..."
-	cp -a -i * ${WORKDIR}/
-	cd ${WORKDIR} && rm -rf ${TMP}
+	cd ${WORKDIR}
+	mv -i ${TMP}/* ${WORKDIR}/
+	rm -rf ${TMP}
 	echo "$0: done extracting."
 else
 	echo "$0: Unexpected execution path !!!"
@@ -123,4 +125,5 @@ fi
 # -------------------------------------------------------------------------------------------------
 # 2017-11-27	0.1.1	refactor to include Changes and better UI
 #			introduce COMMANDS array
-#
+# 2019-02-22	0.1.2	fix a bug in argument handling
+#			handle filenames with spaces (use `mv` instead of `cp *`)
