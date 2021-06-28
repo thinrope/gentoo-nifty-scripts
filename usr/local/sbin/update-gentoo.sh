@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION="1.0.7"
+VERSION="1.0.8"
 
 trap 'echo -ne "\n:::\n:::\tCaught signal, exiting at line $LINENO, while running :${BASH_COMMAND}:\n:::\n"; exit' SIGINT SIGQUIT
 
@@ -16,9 +16,6 @@ COMMANDS[eix-sync]="/usr/bin/eix-sync"
 
 ## app-admin/perl-cleaner-2.25
 COMMANDS[perl-cleaner]="/usr/sbin/perl-cleaner"
-
-## app-portage/demerge-0.047-r2
-COMMANDS[demerge]="/usr/bin/demerge"
 
 ## sys-apps/portage-2.3.13-r1
 COMMANDS[emerge]="/usr/bin/emerge"
@@ -65,7 +62,7 @@ done
 
 ${COMMANDS[eix-sync]}
 
-${COMMANDS[demerge]} --record --comment "update-gentoo.sh-${VERSION} BEGIN"
+#${COMMANDS[demerge]} --record --comment "update-gentoo.sh-${VERSION} BEGIN"
 
 ${COMMANDS[emerge]} -Dtuv --newuse --keep-going @system $1
 ${COMMANDS[emerge]} -Dtuv --newuse --keep-going --with-bdeps=y @world $1
@@ -78,7 +75,7 @@ ${COMMANDS[emaint]} -f all
 
 ${COMMANDS[eclean]} --destructive distfiles --fetch-restricted
 
-${COMMANDS[demerge]} --record --comment "update-gentoo.sh-${VERSION} END"
+#${COMMANDS[demerge]} --record --comment "update-gentoo.sh-${VERSION} END"
 
 # -------------------------------------------------------------------------------------------------
 # YYYY-mm-dd	ver	Changes
@@ -86,3 +83,4 @@ ${COMMANDS[demerge]} --record --comment "update-gentoo.sh-${VERSION} END"
 # 2017-11-26	1.0.6	remove dependency on python-updater (handled by emerge -N or -U)
 #			add COMMANDS dependencies and usage()
 # 2017-11-27	1.0.7	refactor to unify Changes
+# 2021-06-28	1.0.8	remove demerge (deprecated)
