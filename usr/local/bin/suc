@@ -1,0 +1,16 @@
+#!/usr/bin/perl
+use warnings;
+use strict;
+
+my %H;
+while (<>)
+{
+	s#\r*\n$##g;
+	$H{$_}++;
+}
+
+print map { "$_,$H{$_}\n" }
+	sort { $H{$b} <=> $H{$a} || $a cmp $b }
+		keys %H;
+__END__
+A filter for on-liners that is somewhat equivalent to "sort |uniq -c |sort"
