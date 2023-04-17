@@ -1,29 +1,30 @@
 #!/bin/bash
-VERSION="0.0.12"
+VERSION="0.0.13"
 
 trap 'echo -ne "\n:::\n:::\tCaught signal, exiting at line $LINENO, while running :${BASH_COMMAND}:\n:::\n"; exit' SIGINT SIGQUIT
 
 # device_confirm_blank.sh: Tool to make sure a block device is blank / empty
 #
-# Copyright © 2015-2017 Kalin KOZHUHAROV <kalin@thinrope.net>
+# Copyright © 2015-2023 Kalin KOZHUHAROV <kalin@thinrope.net>
 
 
+NUMBER_OF_ARGUMENTS=1
+DEVICE_TO_CHECK=$1
 
 # {{{ external dependencies
 declare -A COMMANDS
-## sys-apps/util-linux-2.28.2
+## sys-apps/util-linux-2.38.1
 COMMANDS[blockdev]="/sbin/blockdev"
 
-## sys-apps/coreutils-8.26
+## sys-apps/coreutils-9.1-r2
 COMMANDS[shuf]="/usr/bin/shuf"
 COMMANDS[dd]="/bin/dd"
 COMMANDS[md5sum]="/usr/bin/md5sum"
 COMMANDS[numfmt]="/usr/bin/numfmt"
-## sys-devel/bc-1.06.95-r1
+## sys-devel/bc-1.07.1-r6
 COMMANDS[bc]="/usr/bin/bc"
 # external dependencies }}}
-
-NUMBER_OF_ARGUMENTS=1
+# {{{ standard error checking
 function usage()
 {
 	echo -ne "\n"
@@ -31,7 +32,6 @@ function usage()
 	echo -ne "Usage: $0 <DEVICE_TO_CHECK>\n"
 }
 
-# {{{ standard error checking
 if [ "$#" -ne ${NUMBER_OF_ARGUMENTS} ]
 then
 	echo "$0: Illegal number of parameters: $# (should have been ${NUMBER_OF_ARGUMENTS}) !!!"
@@ -56,7 +56,6 @@ do
 done
 # standard error checking }}}
 
-DEVICE_TO_CHECK=$1
 # FIXME: does not work with VERBOSE
 VERBOSE=0
 # FIXME: calculate based on % of size
@@ -67,7 +66,7 @@ CHECK_MD5=$(${COMMANDS[dd]} if=/dev/zero bs=1048576 count=1 2>/dev/null|md5sum)
 
 if [ ! -r "${DEVICE_TO_CHECK}" ]
 then
-	echo "$0: Cannot read ${DEVICE_TO_CHECK} !!!"
+	echo "$0: Cannot read ${DEVICE_TO_CHECK} !!! Login as root or use sudo?"
 	exit -4
 fi
 
@@ -136,4 +135,6 @@ exit 0
 # YYYY-mm-dd	ver	Changes
 # -------------------------------------------------------------------------------------------------
 # 2017-11-27	0.0.12	refactor to include Changes and better UI
-#
+# 2023-04-17	0.0.13	refactor comments, update package versions
+
+# vim: foldmethod=marker
