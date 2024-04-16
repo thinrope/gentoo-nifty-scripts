@@ -1,32 +1,34 @@
 #!/bin/bash
-VERSION="1.0.8"
+VERSION="1.0.9"
 
 trap 'echo -ne "\n:::\n:::\tCaught signal, exiting at line $LINENO, while running :${BASH_COMMAND}:\n:::\n"; exit' SIGINT SIGQUIT
 
 # update-gentoo.sh: Script to update all possible things in Gentoo box
 #
-# Copyright © 2012-2017 Kalin KOZHUHAROV <kalin@thinrope.net>
+# Copyright © 2012-2024 Kalin KOZHUHAROV <kalin@thinrope.net>
 
 
+NUMBER_OF_ARGUMENTS=0
 
 # {{{ external dependencies
 declare -A COMMANDS
-## app-portage/eix-0.32.9
+
+## GENTOO_DEP: app-portage/eix-0.36.7
 COMMANDS[eix-sync]="/usr/bin/eix-sync"
 
-## app-admin/perl-cleaner-2.25
+## GENTOO_DEP: app-admin/perl-cleaner-2.31
 COMMANDS[perl-cleaner]="/usr/sbin/perl-cleaner"
 
-## sys-apps/portage-2.3.13-r1
+## sys-apps/portage-3.0.61-r1
 COMMANDS[emerge]="/usr/bin/emerge"
 COMMANDS[emaint]="/usr/sbin/emaint"
 
-## app-portage/gentoolkit-0.4.0
+## app-portage/gentoolkit-0.6.5
 COMMANDS[revdep-rebuild]="/usr/bin/revdep-rebuild"
 COMMANDS[eclean]="/usr/bin/eclean"
-# external dependencies }}}
 
-NUMBER_OF_ARGUMENTS=0
+# external dependencies }}}
+# {{{ standard error checking
 function usage()
 {
 	echo -ne "\n"
@@ -34,7 +36,6 @@ function usage()
 	echo -ne "Usage: $0\n"
 }
 
-# {{{ standard error checking
 if [ "$#" -ne ${NUMBER_OF_ARGUMENTS} ]
 then
 	echo "$0: Illegal number of parameters: $# (should have been ${NUMBER_OF_ARGUMENTS}) !!!"
@@ -84,3 +85,7 @@ ${COMMANDS[eclean]} --destructive distfiles --fetch-restricted
 #			add COMMANDS dependencies and usage()
 # 2017-11-27	1.0.7	refactor to unify Changes
 # 2021-06-28	1.0.8	remove demerge (deprecated)
+# 2024-04-15	1.0.9	use GENTOO_DEP
+#
+
+# vim: foldmethod=marker

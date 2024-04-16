@@ -1,23 +1,26 @@
 #!/bin/bash
-VERSION="0.1.2"
+VERSION="0.1.3"
 
 trap 'echo -ne "\n:::\n:::\tCaught signal, exiting at line $LINENO, while running :${BASH_COMMAND}:\n:::\n"; exit' SIGINT SIGQUIT
 
 # jzip: Tool to extract Shift_JIS/CP932 (by default) archived zip files
 #
-# Copyright © 2017-2019 Kalin KOZHUHAROV <kalin@thinrope.net>
+# Copyright © 2017-2024 Kalin KOZHUHAROV <kalin@thinrope.net>
 
 
 
 # {{{ external dependencies
 declare -A COMMANDS
-## app-arch/p7zip-16.02-r4
+
+## GENTOO_DEP: app-arch/p7zip-17.05-r1
 COMMANDS[7z]="/usr/bin/7z"
 
-## sys-libs/glibc-2.27-r6
+## GENTOO_DEP: sys-libs/glibc-2.38-r11
 COMMANDS[iconv]="/usr/bin/iconv"
-## app-text/convmv-2.04
+
+## GENTOO_DEP: app-text/convmv-2.05-r1
 COMMANDS[convmv]="/usr/bin/convmv"
+
 # external dependencies }}}
 
 NUMBER_OF_ARGUMENTS=2
@@ -127,3 +130,6 @@ fi
 #			introduce COMMANDS array
 # 2019-02-22	0.1.2	fix a bug in argument handling
 #			handle filenames with spaces (use `mv` instead of `cp *`)
+# 2024-04-15	0.1.3	use GENTOO_DEP
+
+# vim: foldmethod=marker

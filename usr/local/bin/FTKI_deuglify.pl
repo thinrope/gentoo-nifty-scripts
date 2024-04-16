@@ -12,7 +12,7 @@ use strict;
 
 =head1 AUTHOR
 
-  Copyright (c) 2018 by Kalin KOZHUHAROV <kalin@thinrope.net>
+  Copyright (c) 2018-2024 by Kalin KOZHUHAROV <kalin@thinrope.net>
 
 =head1 LICENSE
 

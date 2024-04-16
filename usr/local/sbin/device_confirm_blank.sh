@@ -1,11 +1,11 @@
 #!/bin/bash
-VERSION="0.0.13"
+VERSION="0.1.0"
 
 trap 'echo -ne "\n:::\n:::\tCaught signal, exiting at line $LINENO, while running :${BASH_COMMAND}:\n:::\n"; exit' SIGINT SIGQUIT
 
 # device_confirm_blank.sh: Tool to make sure a block device is blank / empty
 #
-# Copyright © 2015-2023 Kalin KOZHUHAROV <kalin@thinrope.net>
+# Copyright © 2015-2024 Kalin KOZHUHAROV <kalin@thinrope.net>
 
 
 NUMBER_OF_ARGUMENTS=1
@@ -13,16 +13,19 @@ DEVICE_TO_CHECK=$1
 
 # {{{ external dependencies
 declare -A COMMANDS
-## sys-apps/util-linux-2.38.1
+
+## GENTOO_DEP: sys-apps/util-linux-2.39.3-r7
 COMMANDS[blockdev]="/sbin/blockdev"
 
-## sys-apps/coreutils-9.1-r2
+## GENTOO_DEP: sys-apps/coreutils-9.4-r1
 COMMANDS[shuf]="/usr/bin/shuf"
 COMMANDS[dd]="/bin/dd"
 COMMANDS[md5sum]="/usr/bin/md5sum"
 COMMANDS[numfmt]="/usr/bin/numfmt"
-## sys-devel/bc-1.07.1-r6
+
+## GENTOO_DEP: sys-devel/bc-1.07.1-r6
 COMMANDS[bc]="/usr/bin/bc"
+
 # external dependencies }}}
 # {{{ standard error checking
 function usage()
@@ -136,5 +139,7 @@ exit 0
 # -------------------------------------------------------------------------------------------------
 # 2017-11-27	0.0.12	refactor to include Changes and better UI
 # 2023-04-17	0.0.13	refactor comments, update package versions
+# 2024-04-15	0.1.0	use GENTOO_DEP
+#
 
 # vim: foldmethod=marker

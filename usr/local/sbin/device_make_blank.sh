@@ -1,11 +1,11 @@
 #!/bin/bash
-VERSION="0.0.1"
+VERSION="0.0.2"
 
 trap 'echo -ne "\n:::\n:::\tCaught signal, exiting at line $LINENO, while running :${BASH_COMMAND}:\n:::\n"; exit' SIGINT SIGQUIT
 
 # device_make_blank.sh: Tool to wipe a block device by writing from /dev/zero to it
 #
-# Copyright © 2023 Kalin KOZHUHAROV <kalin@thinrope.net>
+# Copyright © 2023-2024 Kalin KOZHUHAROV <kalin@thinrope.net>
 
 
 NUMBER_OF_ARGUMENTS=1
@@ -13,8 +13,10 @@ DEVICE_TO_WIPE=$1
 
 # {{{ external dependencies
 declare -A COMMANDS
-## sys-apps/pv-1.6.20
+
+## GENTOO_DEP: sys-apps/pv-1.8.5
 COMMANDS[pv]="/usr/bin/pv"
+
 # external dependencies }}}
 # {{{ standard error checking
 function usage()
@@ -64,6 +66,7 @@ exit 0
 # YYYY-mm-dd	ver	Changes
 # -------------------------------------------------------------------------------------------------
 # 2023-04-17	0.0.1	Initial commit
+# 2024-04-15	0.0.2	use GENTOO_DEP
 #
 
 # vim: foldmethod=marker
