@@ -1,11 +1,12 @@
 #!/bin/bash
-VERSION="0.1.0"
+VERSION="0.1.1"
+TOOL="device_confirm_blank.sh"
 
 trap 'echo -ne "\n:::\n:::\tCaught signal, exiting at line $LINENO, while running :${BASH_COMMAND}:\n:::\n"; exit' SIGINT SIGQUIT
 
 # device_confirm_blank.sh: Tool to make sure a block device is blank / empty
 #
-# Copyright © 2015-2024 Kalin KOZHUHAROV <kalin@thinrope.net>
+# Copyright © 2015-2025 Kalin KOZHUHAROV <kalin@thinrope.net>
 
 
 NUMBER_OF_ARGUMENTS=1
@@ -14,16 +15,17 @@ DEVICE_TO_CHECK=$1
 # {{{ external dependencies
 declare -A COMMANDS
 
-## GENTOO_DEP: sys-apps/util-linux-2.39.3-r7
+## GENTOO_DEP: sys-apps/util-linux-2.41.1-r1
 COMMANDS[blockdev]="/sbin/blockdev"
 
-## GENTOO_DEP: sys-apps/coreutils-9.4-r1
-COMMANDS[shuf]="/usr/bin/shuf"
+## GENTOO_DEP: sys-apps/coreutils-9.7
 COMMANDS[dd]="/bin/dd"
 COMMANDS[md5sum]="/usr/bin/md5sum"
 COMMANDS[numfmt]="/usr/bin/numfmt"
+COMMANDS[shuf]="/usr/bin/shuf"
+COMMANDS[sort]="/usr/bin/sort"
 
-## GENTOO_DEP: sys-devel/bc-1.07.1-r6
+## GENTOO_DEP: sys-devel/bc-1.08.2
 COMMANDS[bc]="/usr/bin/bc"
 
 # external dependencies }}}
@@ -82,6 +84,7 @@ function exit_on_end()
 
 TOTAL_BYTES=$(${COMMANDS[blockdev]} --getsize64 ${DEVICE_TO_CHECK})
 TOTAL_BYTES_IECI=$(echo "${TOTAL_BYTES}" |${COMMANDS[numfmt]} --suffix=B --to=iec-i)
+echo "<_ ${TOOL}-${VERSION} _>"
 echo "|Verifying that ${DEVICE_TO_CHECK} (size:${TOTAL_BYTES_IECI}) contains only 0s..."
 
 FIRST_OFFSET=0
@@ -111,7 +114,7 @@ fi
 echo -ne "|\t3. Verifying some (max. ${NUMBER_OF_CHECKS}) random runs of size ${CHECK_SIZE}B in the middle..."
 # exclude first/last
 TOTAL_CHECKS=$(echo "scale=0; (${TOTAL_BYTES} - 2 * ${CHECK_SIZE})/${CHECK_SIZE}" |${COMMANDS[bc]} -l)
-RUNS_TO_CHECK=$(${COMMANDS[shuf]} --head-count=${NUMBER_OF_CHECKS} --input-range="1-${TOTAL_CHECKS}")
+RUNS_TO_CHECK=$(${COMMANDS[shuf]} --head-count=${NUMBER_OF_CHECKS} --input-range="1-${TOTAL_CHECKS}" |sort -g)
 for CURRENT_RUN in ${RUNS_TO_CHECK}
 do
 	((TEST_RUN+=1)) 
@@ -140,6 +143,7 @@ exit 0
 # 2017-11-27	0.0.12	refactor to include Changes and better UI
 # 2023-04-17	0.0.13	refactor comments, update package versions
 # 2024-04-15	0.1.0	use GENTOO_DEP
+# 2025-09-26	0.1.1	update GENTOO_DEP; fix issue 1; add VERSION to output
 #
 
 # vim: foldmethod=marker
