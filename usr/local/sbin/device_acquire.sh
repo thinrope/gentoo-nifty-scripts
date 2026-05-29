@@ -1,11 +1,12 @@
 #!/bin/bash
-VERSION="0.0.1"
+VERSION="0.0.2"
+TOOL="device_acquire.sh"
 
 trap 'echo -ne "\n:::\n:::\tCaught signal, exiting at line $LINENO, while running :${BASH_COMMAND}:\n:::\n"; exit' SIGINT SIGQUIT
 
 # device_acquire.sh: Tool to acquire a physical block device to the current directory (must be empty)
 #
-# Copyright © 2015-2024 Kalin KOZHUHAROV <kalin@thinrope.net>
+# Copyright © 2015-2026 Kalin KOZHUHAROV <kalin@thinrope.net>
 
 
 NUMBER_OF_ARGUMENTS=1;
@@ -18,31 +19,32 @@ DEBUG="";
 # {{{ external dependencies
 declare -A COMMANDS
 
-## GENTOO_DEP: sys-apps/coreutils-9.5
-COMMANDS[head]="/usr/bin/head"
+## GENTOO_DEP: >=sys-apps/pv-1.8.12
+COMMANDS[pv]="/usr/bin/pv"
+
+## GENTOO_DEP: >=sys-apps/util-linux-2.41.1-r1
+COMMANDS[sfdisk]="/usr/bin/sfdisk"
+
+## GENTOO_DEP: >=sys-devel/bc-1.08.2
+COMMANDS[bc]="/usr/bin/bc"
+
+## GENTOO_DEP: >=sys-apps/coreutils-9.7
 COMMANDS[cp]="/usr/bin/cp"
+COMMANDS[head]="/usr/bin/head"
 COMMANDS[md5sum]="/usr/bin/md5sum"
 COMMANDS[tee]="/usr/bin/tee"
 
-## GENTOO_DEP: sys-devel/bc-1.07.1-r6
-COMMANDS[bc]="/usr/bin/bc"
-
-## GENTOO_DEP: sys-apps/hdparm-9.65-r2
+## GENTOO_DEP: >=sys-apps/hdparm-9.65-r2
 COMMANDS[hdparm]="/usr/bin/hdparm"
 
-## GENTOO_DEP: sys-apps/util-linix-2.39.4-r1
-COMMANDS[sfdisk]="/usr/bin/sfdisk"
 
-## GENTOO_DEP: sys-apps/smartmontools-7.4-r1
+## GENTOO_DEP: >=sys-apps/smartmontools-7.4-r1
 COMMANDS[smartctl]="/usr/bin/smartctl"
 
-## GENTOO_DEP: sys-apps/pv-1.8.12
-COMMANDS[pv]="/usr/bin/pv"
-
-## GENTOO_DEP: app-misc/colordiff-1.0.21
+## GENTOO_DEP: >=app-misc/colordiff-1.0.21
 COMMANDS[colordiff]="/usr/bin/colordiff"
 
-## GENTOO_DEP: app-crypt/md5deep-4.4
+## GENTOO_DEP: >=app-crypt/md5deep-4.4
 COMMANDS[md5deep]="/usr/bin/md5deep"
 
 # external dependencies }}}
@@ -51,7 +53,7 @@ function usage()
 {
 	echo -ne "\n"
 	echo -ne "==================== $0-${VERSION} ====================\n"
-	echo -ne "Usage: $0 <DEVICE>\n"
+	echo -ne "Usage: $0 <DEVICE_TO_ACQUIRE>\n"
 	echo -ne "Example: $0 sdc\n"
 }
 
@@ -123,6 +125,7 @@ exit 0
 # YYYY-mm-dd	ver	Changes
 # -------------------------------------------------------------------------------------------------
 # 2024-09-26	0.0.1	Initial refactoring and release
+# 2026-05-29	0.0.3	unify diff to other tools
 #
 
 # vim: foldmethod=marker

@@ -1,24 +1,25 @@
 #!/bin/bash
-VERSION="0.1.3"
+VERSION="0.1.4"
+TOOL="jzip"
 
 trap 'echo -ne "\n:::\n:::\tCaught signal, exiting at line $LINENO, while running :${BASH_COMMAND}:\n:::\n"; exit' SIGINT SIGQUIT
 
 # jzip: Tool to extract Shift_JIS/CP932 (by default) archived zip files
 #
-# Copyright © 2017-2024 Kalin KOZHUHAROV <kalin@thinrope.net>
+# Copyright © 2017-2026 Kalin KOZHUHAROV <kalin@thinrope.net>
 
 
 
 # {{{ external dependencies
 declare -A COMMANDS
 
-## GENTOO_DEP: app-arch/p7zip-17.05-r1
+## GENTOO_DEP: ( >=app-arch/p7zip-17.05-r1 || >=app-arch/7zip-26.01 ) 
 COMMANDS[7z]="/usr/bin/7z"
 
-## GENTOO_DEP: sys-libs/glibc-2.38-r11
+## GENTOO_DEP: >=sys-libs/glibc-2.38-r11
 COMMANDS[iconv]="/usr/bin/iconv"
 
-## GENTOO_DEP: app-text/convmv-2.05-r1
+## GENTOO_DEP: >=app-text/convmv-2.05-r1
 COMMANDS[convmv]="/usr/bin/convmv"
 
 # external dependencies }}}
@@ -131,5 +132,6 @@ fi
 # 2019-02-22	0.1.2	fix a bug in argument handling
 #			handle filenames with spaces (use `mv` instead of `cp *`)
 # 2024-04-15	0.1.3	use GENTOO_DEP
+# 2026-05-29	0.1.4	unify diff to oter tools
 
 # vim: foldmethod=marker

@@ -1,20 +1,22 @@
 #!/bin/bash
-VERSION="0.0.2"
+VERSION="0.0.3"
+TOOL="device_make_blank.sh"
 
 trap 'echo -ne "\n:::\n:::\tCaught signal, exiting at line $LINENO, while running :${BASH_COMMAND}:\n:::\n"; exit' SIGINT SIGQUIT
 
 # device_make_blank.sh: Tool to wipe a block device by writing from /dev/zero to it
 #
-# Copyright © 2023-2024 Kalin KOZHUHAROV <kalin@thinrope.net>
+# Copyright © 2015-2026 Kalin KOZHUHAROV <kalin@thinrope.net>
 
 
-NUMBER_OF_ARGUMENTS=1
-DEVICE_TO_WIPE=$1
+NUMBER_OF_ARGUMENTS=1;
+DEVICE_TO_WIPE="$1";	# e.g. sdc
+DEVICE="/dev/${DEVICE_TO_WIPE}";
 
 # {{{ external dependencies
 declare -A COMMANDS
 
-## GENTOO_DEP: sys-apps/pv-1.8.5
+## GENTOO_DEP: >=sys-apps/pv-1.8.12
 COMMANDS[pv]="/usr/bin/pv"
 
 # external dependencies }}}
@@ -24,6 +26,7 @@ function usage()
 	echo -ne "\n"
 	echo -ne "==================== $0-${VERSION} ====================\n"
 	echo -ne "Usage: $0 <DEVICE_TO_WIPE>\n"
+	echo -ne "Example: $0 sdc\n"
 }
 
 if [ "$#" -ne ${NUMBER_OF_ARGUMENTS} ]
@@ -50,9 +53,9 @@ do
 done
 # standard error checking }}}
 
-if [ ! -r "${DEVICE_TO_WIPE}" ]
+if [ ! -r "${DEVICE}" ]
 then
-	echo "$0: Cannot read ${DEVICE_TO_WIPE} !!! Login as root or use sudo?"
+	echo "$0: Cannot read ${DEVICE} !!! Login as root or use sudo?"
 	exit -4
 fi
 
@@ -67,6 +70,7 @@ exit 0
 # -------------------------------------------------------------------------------------------------
 # 2023-04-17	0.0.1	Initial commit
 # 2024-04-15	0.0.2	use GENTOO_DEP
+# 2026-05-29	0.0.3	unify diff to other tools
 #
 
 # vim: foldmethod=marker

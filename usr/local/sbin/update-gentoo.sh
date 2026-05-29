@@ -1,11 +1,12 @@
 #!/bin/bash
-VERSION="1.0.9"
+VERSION="1.0.10"
+TOOL="update-gentoo.sh"
 
 trap 'echo -ne "\n:::\n:::\tCaught signal, exiting at line $LINENO, while running :${BASH_COMMAND}:\n:::\n"; exit' SIGINT SIGQUIT
 
 # update-gentoo.sh: Script to update all possible things in Gentoo box
 #
-# Copyright © 2012-2024 Kalin KOZHUHAROV <kalin@thinrope.net>
+# Copyright © 2012-2026 Kalin KOZHUHAROV <kalin@thinrope.net>
 
 
 NUMBER_OF_ARGUMENTS=0
@@ -13,17 +14,17 @@ NUMBER_OF_ARGUMENTS=0
 # {{{ external dependencies
 declare -A COMMANDS
 
-## GENTOO_DEP: app-portage/eix-0.36.7
+## GENTOO_DEP: >=app-portage/eix-0.36.7
 COMMANDS[eix-sync]="/usr/bin/eix-sync"
 
-## GENTOO_DEP: app-admin/perl-cleaner-2.31
+## GENTOO_DEP: >=app-admin/perl-cleaner-2.31
 COMMANDS[perl-cleaner]="/usr/sbin/perl-cleaner"
 
-## sys-apps/portage-3.0.61-r1
+## GENTOO_DEP: >=sys-apps/portage-3.0.61-r1
 COMMANDS[emerge]="/usr/bin/emerge"
 COMMANDS[emaint]="/usr/sbin/emaint"
 
-## app-portage/gentoolkit-0.6.5
+## GENTOO_DEP: >=app-portage/gentoolkit-0.6.5
 COMMANDS[revdep-rebuild]="/usr/bin/revdep-rebuild"
 COMMANDS[eclean]="/usr/bin/eclean"
 
@@ -86,6 +87,7 @@ ${COMMANDS[eclean]} --destructive distfiles --fetch-restricted
 # 2017-11-27	1.0.7	refactor to unify Changes
 # 2021-06-28	1.0.8	remove demerge (deprecated)
 # 2024-04-15	1.0.9	use GENTOO_DEP
+# 2026-05-29	1.0.10	unify diff to other tools
 #
 
 # vim: foldmethod=marker

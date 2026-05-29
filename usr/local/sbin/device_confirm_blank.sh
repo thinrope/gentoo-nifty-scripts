@@ -1,32 +1,33 @@
 #!/bin/bash
-VERSION="0.1.1"
+VERSION="0.1.2"
 TOOL="device_confirm_blank.sh"
 
 trap 'echo -ne "\n:::\n:::\tCaught signal, exiting at line $LINENO, while running :${BASH_COMMAND}:\n:::\n"; exit' SIGINT SIGQUIT
 
 # device_confirm_blank.sh: Tool to make sure a block device is blank / empty
 #
-# Copyright © 2015-2025 Kalin KOZHUHAROV <kalin@thinrope.net>
+# Copyright © 2015-2026 Kalin KOZHUHAROV <kalin@thinrope.net>
 
 
-NUMBER_OF_ARGUMENTS=1
-DEVICE_TO_CHECK=$1
+NUMBER_OF_ARGUMENTS=1;
+DEVICE_TO_CHECK="$1";	# e.g. sdc
+DEVICE="/dev/${DEVICE_TO_CHECK}";
 
 # {{{ external dependencies
 declare -A COMMANDS
 
-## GENTOO_DEP: sys-apps/util-linux-2.41.1-r1
+## GENTOO_DEP: >=sys-apps/util-linux-2.41.1-r1
 COMMANDS[blockdev]="/sbin/blockdev"
 
-## GENTOO_DEP: sys-apps/coreutils-9.7
+## GENTOO_DEP: >=sys-devel/bc-1.08.2
+COMMANDS[bc]="/usr/bin/bc"
+
+## GENTOO_DEP: >=sys-apps/coreutils-9.7
 COMMANDS[dd]="/bin/dd"
 COMMANDS[md5sum]="/usr/bin/md5sum"
 COMMANDS[numfmt]="/usr/bin/numfmt"
 COMMANDS[shuf]="/usr/bin/shuf"
 COMMANDS[sort]="/usr/bin/sort"
-
-## GENTOO_DEP: sys-devel/bc-1.08.2
-COMMANDS[bc]="/usr/bin/bc"
 
 # external dependencies }}}
 # {{{ standard error checking
@@ -35,6 +36,7 @@ function usage()
 	echo -ne "\n"
 	echo -ne "==================== $0-${VERSION} ====================\n"
 	echo -ne "Usage: $0 <DEVICE_TO_CHECK>\n"
+	echo -ne "Example: $0 sdc\n"
 }
 
 if [ "$#" -ne ${NUMBER_OF_ARGUMENTS} ]
@@ -69,28 +71,28 @@ NUMBER_OF_CHECKS=1024
 CHECK_SIZE=1048576
 CHECK_MD5=$(${COMMANDS[dd]} if=/dev/zero bs=1048576 count=1 2>/dev/null|md5sum)
 
-if [ ! -r "${DEVICE_TO_CHECK}" ]
+if [ ! -r "${DEVICE}" ]
 then
-	echo "$0: Cannot read ${DEVICE_TO_CHECK} !!! Login as root or use sudo?"
+	echo "$0: Cannot read ${DEVICE} !!! Login as root or use sudo?"
 	exit -4
 fi
 
 function exit_on_end()
 {
 	echo
-	echo "Device ${DEVICE_TO_CHECK} is NOT blank, it DOES contain non-zero bytes!"
+	echo "Device ${DEVICE} is NOT blank, it DOES contain non-zero bytes!"
 	exit 10
 }
 
-TOTAL_BYTES=$(${COMMANDS[blockdev]} --getsize64 ${DEVICE_TO_CHECK})
+TOTAL_BYTES=$(${COMMANDS[blockdev]} --getsize64 ${DEVICE})
 TOTAL_BYTES_IECI=$(echo "${TOTAL_BYTES}" |${COMMANDS[numfmt]} --suffix=B --to=iec-i)
 echo "<_ ${TOOL}-${VERSION} _>"
-echo "|Verifying that ${DEVICE_TO_CHECK} (size:${TOTAL_BYTES_IECI}) contains only 0s..."
+echo "|Verifying that ${DEVICE} (size:${TOTAL_BYTES_IECI}) contains only 0s..."
 
 FIRST_OFFSET=0
 echo -ne "|\t1. Verifying ${CHECK_SIZE}B at the beginning (at offset ${FIRST_OFFSET})..."
 TEST_RUN=1
-${COMMANDS[dd]} if=${DEVICE_TO_CHECK} bs=${CHECK_SIZE} count=1 iflag=skip_bytes skip=0 2>/dev/null| ${COMMANDS[md5sum]} --status --quiet -c <(echo "${CHECK_MD5}") 2>/dev/null 1>&2
+${COMMANDS[dd]} if=${DEVICE} bs=${CHECK_SIZE} count=1 iflag=skip_bytes skip=0 2>/dev/null| ${COMMANDS[md5sum]} --status --quiet -c <(echo "${CHECK_MD5}") 2>/dev/null 1>&2
 if [ $? -ne 0 ]
 then
 	echo -ne "\b\b\b: FAILED!\n"
@@ -102,7 +104,7 @@ fi
 LAST_OFFSET=$(( ${TOTAL_BYTES} - ${CHECK_SIZE} ))
 echo -ne "|\t2. Verifying ${CHECK_SIZE}B at the end (at offset ${LAST_OFFSET})..."
 TEST_RUN=2
-${COMMANDS[dd]} if=${DEVICE_TO_CHECK} bs=${CHECK_SIZE} count=1 iflag=skip_bytes skip=${LAST_OFFSET} 2>/dev/null| ${COMMANDS[md5sum]} --status --quiet -c <(echo "${CHECK_MD5}") 2>/dev/null 1>&2
+${COMMANDS[dd]} if=${DEVICE} bs=${CHECK_SIZE} count=1 iflag=skip_bytes skip=${LAST_OFFSET} 2>/dev/null| ${COMMANDS[md5sum]} --status --quiet -c <(echo "${CHECK_MD5}") 2>/dev/null 1>&2
 if [ $? -ne 0 ]
 then
 	echo -ne "\b\b\b: FAILED!\n"
@@ -118,7 +120,7 @@ RUNS_TO_CHECK=$(${COMMANDS[shuf]} --head-count=${NUMBER_OF_CHECKS} --input-range
 for CURRENT_RUN in ${RUNS_TO_CHECK}
 do
 	((TEST_RUN+=1)) 
-	${COMMANDS[dd]} if=${DEVICE_TO_CHECK} bs=${CHECK_SIZE} count=1 skip=${CURRENT_RUN} 2>/dev/null| ${COMMANDS[md5sum]} --status --quiet -c <(echo "${CHECK_MD5}") 2>/dev/null 1>&2
+	${COMMANDS[dd]} if=${DEVICE} bs=${CHECK_SIZE} count=1 skip=${CURRENT_RUN} 2>/dev/null| ${COMMANDS[md5sum]} --status --quiet -c <(echo "${CHECK_MD5}") 2>/dev/null 1>&2
 	if [ $? -ne 0 ]
 	then
 		echo -ne "\b\b\b: Failed run ${CURRENT_RUN} at offset $(( ${CURRENT_RUN} * ${CHECK_SIZE}))!\n"
@@ -134,7 +136,7 @@ echo
 VERIFIED_SIZE=$(echo "scale=2; ${TEST_RUN} * ${CHECK_SIZE}" |${COMMANDS[bc]} -l)
 VERIFIED_SIZE_IECI=$(echo "${VERIFIED_SIZE}" |${COMMANDS[numfmt]} --suffix=B --to=iec-i)
 PERCENT=$(echo "scale=2; 100.0 * ${VERIFIED_SIZE} / ${TOTAL_BYTES}" |${COMMANDS[bc]} -l)
-echo "${VERIFIED_SIZE_IECI} of ${TOTAL_BYTES_IECI} (or about ${PERCENT}%) of ${DEVICE_TO_CHECK} were verified to be 0s."
+echo "${VERIFIED_SIZE_IECI} of ${TOTAL_BYTES_IECI} (or about ${PERCENT}%) of ${DEVICE} were verified to be 0s."
 exit 0
 
 # -------------------------------------------------------------------------------------------------
@@ -144,6 +146,7 @@ exit 0
 # 2023-04-17	0.0.13	refactor comments, update package versions
 # 2024-04-15	0.1.0	use GENTOO_DEP
 # 2025-09-26	0.1.1	update GENTOO_DEP; fix issue 1; add VERSION to output
+# 2026-05-29	0.1.2	unify diff to other tools
 #
 
 # vim: foldmethod=marker
