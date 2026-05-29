@@ -13,7 +13,7 @@ trap 'echo -ne "\n:::\n:::\tCaught signal, exiting at line $LINENO, while runnin
 # {{{ external dependencies
 declare -A COMMANDS
 
-## GENTOO_DEP: ( >=app-arch/p7zip-17.05-r1 || >=app-arch/7zip-26.01 ) 
+## GENTOO_DEP: || ( >=app-arch/p7zip-17.05-r1 >=app-arch/7zip-26.01 )
 COMMANDS[7z]="/usr/bin/7z"
 
 ## GENTOO_DEP: >=sys-libs/glibc-2.38-r11
